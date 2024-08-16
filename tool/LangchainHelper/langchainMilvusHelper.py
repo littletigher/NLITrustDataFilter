@@ -5,7 +5,7 @@ from langchain_core.documents import Document
 from dotenv import load_dotenv
 load_dotenv()
 class LangchainMilvusHelper:
-    def __init__(self,uri:str = "http://localhost:19530" , collection_name: str = "expert_knowledge"):
+    def __init__(self,uri:str = os.getenv("milvus_url") , collection_name: str = "expert_knowledge"):
         self.collection_name = collection_name
         self.vector_store = self.create_vector_store(uri=uri,collection_name=collection_name)
 

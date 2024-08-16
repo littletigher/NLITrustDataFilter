@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 import json
 import os
+import re
+
 ds = load_dataset(os.getenv("validate_data_path"))
 class TdfProcess:
     def __init__(self):
@@ -20,6 +22,13 @@ class TdfProcess:
     def reasonableInvoke(self,validate_data:str,confidence_score:int=3):
         return self.ResonableFilter.invoke(validate_data)
 
+    def get_ini(self, conflict_score_string:str):
+
+        conflict_score_string = "Conflict score: 5"
+        first_digit = re.search(r'\d', conflict_score_string).group(0)
+
+        return first_digit # 输出：5
+
     def load_data_from_huggingface(self, data: str):
         return load_dataset(data)
 
@@ -31,20 +40,25 @@ class TdfProcess:
         with open(results_file, 'a') as file:
             for i in tqdm(range(last_index, len(validate_datas)), initial=last_index, total=len(validate_datas),
                           desc="Processing"):
+
                 validate_data = validate_datas[i]["generate_data"]
-                conflict_score = self.contradictionInvoke(validate_data)
+
+                conflict_score= None
+                confidence_score = None
+                is_confidence = None
+                is_conflict = None
                 try:
+                    conflict_score = self.get_ini(self.contradictionInvoke(validate_data))
                     is_conflict = conflict_score <= conflict_boundry
                 except:
                     print(f"error:can't understand {is_conflict}")
                     is_conflict = None
 
-                confidence_score = self.reasonableInvoke(validate_data)
                 try:
+                    confidence_score =self.get_ini(self.reasonableInvoke(validate_data))
                     is_confidence = confidence_score >= confidence_boundry or confidence_score == 0
                 except:
                     print(f"error:can't understand {confidence_score}")
-                    is_confidence = None
 
                 result = {
                     "data": validate_data,

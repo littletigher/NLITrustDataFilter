@@ -4,9 +4,11 @@ from tool.Filter.Reasonable_Filter import ReasonableFilter
 from tool.LangchainHelper.langchainMilvusHelper import LangchainMilvusHelper
 from datasets import load_dataset
 from tqdm import tqdm
+from dotenv import load_dotenv
+load_dotenv()
 import json
 import os
-ds = load_dataset("ZhJiHo/compatible_dataset")
+ds = load_dataset(os.getenv("validate_data_path"))
 class TdfProcess:
     def __init__(self):
         self.ContradictionFilter = ContradictionFilter()
@@ -21,7 +23,7 @@ class TdfProcess:
     def load_data_from_huggingface(self, data: str):
         return load_dataset(data)
 
-    def listProcess(self, validate_datas, conflict_boundry: int = 2, confidence_boundry: int = 3, init: int = 0, results_file='results.jsonl', checkpoint_file='checkpoint.txt'):
+    def listProcess(self, validate_datas, conflict_boundry: int = 2, confidence_boundry: int = 3, init: int = 0, results_file:str='results.jsonl', checkpoint_file:str='checkpoint.txt'):
 
         # Load the last processed index from the checkpoint file
         last_index = self.load_checkpoint(checkpoint_file, init)
@@ -83,5 +85,5 @@ class TdfProcess:
 if __name__ == "__main__":
     tdfProcess = TdfProcess()
     validate_datas = tdfProcess.load_data_from_huggingface(data=os.getenv("validate_data_path"))
-    tdfProcess.listProcess(validate_datas["train"],conflict_boundry=2,confidence_boundry=3,results_file='results.jsonl',checkpoint_file='checkpoint.txt')
+    tdfProcess.listProcess(validate_datas["train"], conflict_boundry=2, confidence_boundry=3, results_file=os.getenv("results_file"), checkpoint_file=os.getenv("checkpoint_file"))
     print(validate_datas["train"])

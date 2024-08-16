@@ -23,9 +23,7 @@ class TdfProcess:
         return self.ResonableFilter.invoke(validate_data)
 
     def get_ini(self, conflict_score_string:str):
-
-        conflict_score_string = "Conflict score: 5"
-        first_digit = re.search(r'\d', conflict_score_string).group(0)
+        first_digit = re.search(r'\d', conflict_score_string.content).group(0)
 
         return int(first_digit) # 输出：5
 

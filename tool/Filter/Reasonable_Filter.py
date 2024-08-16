@@ -28,7 +28,7 @@ class ReasonableFilter:
         # model = self.init_local_model()
         model = self.init_model()
         parser = self.init_parser()
-        chain = prompt_template | model | parser
+        chain = prompt_template | model
         return chain
 
     def init_local_model(self):

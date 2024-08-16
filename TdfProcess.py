@@ -27,7 +27,7 @@ class TdfProcess:
         conflict_score_string = "Conflict score: 5"
         first_digit = re.search(r'\d', conflict_score_string).group(0)
 
-        return first_digit # 输出：5
+        return int(first_digit) # 输出：5
 
     def load_data_from_huggingface(self, data: str):
         return load_dataset(data)
@@ -38,27 +38,24 @@ class TdfProcess:
         last_index = self.load_checkpoint(checkpoint_file, init)
 
         with open(results_file, 'a') as file:
-            for i in tqdm(range(last_index, len(validate_datas)), initial=last_index, total=len(validate_datas),
+            for i in tqdm(range(last_index, 1000), initial=last_index, total=1000,
                           desc="Processing"):
 
                 validate_data = validate_datas[i]["generate_data"]
-
-                conflict_score= None
-                confidence_score = None
-                is_confidence = None
-                is_conflict = None
-                try:
-                    conflict_score = self.get_ini(self.contradictionInvoke(validate_data))
-                    is_conflict = conflict_score <= conflict_boundry
-                except:
-                    print(f"error:can't understand {is_conflict}")
-                    is_conflict = None
-
-                try:
-                    confidence_score =self.get_ini(self.reasonableInvoke(validate_data))
-                    is_confidence = confidence_score >= confidence_boundry or confidence_score == 0
-                except:
-                    print(f"error:can't understand {confidence_score}")
+                conflict_score = self.get_ini(self.contradictionInvoke(validate_data))
+                is_conflict=None
+                is_confidence=None
+                # try:
+                is_conflict = conflict_score <= conflict_boundry
+                # except:
+                #     print(f"error:can't understand {conflict_score}")
+                #     is_conflict = None
+                confidence_score = self.get_ini(self.reasonableInvoke(validate_data))
+                # try:
+                is_confidence = confidence_score >= confidence_boundry or confidence_score == 0
+                # except:
+                #     print(f"error:can't understand {confidence_score}")
+                #     is_confidence = None
 
                 result = {
                     "data": validate_data,

@@ -11,7 +11,8 @@ from tool.LangchainHelper.localHuggingfaceData import get_huggingface_pipeline, 
 load_dotenv()
 class ReasonableFilter:
     class ResultForm(BaseModel):
-        confidence_score:str = Field(description="confidence score")
+        confidence_score:str = Field(description="confidence score which should be int")
+        # reason: str = Field(description="reason")
     def __init__(self):
         self.chain = self.init_chain()
 
@@ -24,7 +25,8 @@ class ReasonableFilter:
         return True
     def init_chain(self):
         prompt_template = self.init_prompt_template()
-        model = self.init_local_model()
+        # model = self.init_local_model()
+        model = self.init_model()
         parser = self.init_parser()
         chain = prompt_template | model | parser
         return chain
@@ -41,7 +43,8 @@ class ReasonableFilter:
         return ChatOpenAI(model="gpt-3.5-turbo")
 
     def init_prompt_template(self):
-        system_template = "Please use your prior knowledge to assess whether the data to be validated is reliable.only output int score Assign a confidence score from 1 to 5, with 5 being highly reliable, 1 being completely unreliable, and 0 if it is impossible to determine the reliability."
+        system_template = "Please use your prior knowledge to assess whether the data to be validated is reliable. Assign a confidence score from 1 to 5, with 5 being highly reliable, 1 being completely unreliable, and 0 if it is impossible to determine the reliability." \
+                            ".the output should only contain score For example 2"
         users_template = '''
         Data to be validated: {validate_data}
         '''

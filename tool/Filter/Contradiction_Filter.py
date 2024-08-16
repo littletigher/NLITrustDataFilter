@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 load_dotenv()
 class ContradictionFilter:
     class ResultForm(BaseModel):
-        conflict_score: int = Field(description="conflict score only output sore")
+        conflict_score: str = Field(description="conflict score which should be int")
+        # reason:str = Field(description="reason")
     def __init__(self):
         self.chain = self.init_chain()
 
@@ -23,7 +24,8 @@ class ContradictionFilter:
         return True
     def init_chain(self):
         prompt_template = self.init_prompt_template()
-        model = self.init_local_model()
+        # model = self.init_local_model()
+        model = self.init_model()
         parser = self.init_parser()
         chain = prompt_template | model | parser
         return chain
@@ -38,7 +40,8 @@ class ContradictionFilter:
         return ChatOpenAI(model="gpt-3.5-turbo")
 
     def init_prompt_template(self):
-        system_template = "Please use known high-confidence data to verify whether the data to be validated conflicts with the existing data. You output ONLY need to be int,If there is a conflict, then the data is unreliable. If there is no conflict, then the data is relatively reliable. Please assign a conflict score from 1 to 5, with 5 indicating a conflict, 1 indicating no conflict, and 0 if the two are unrelated."
+        system_template = "Please use known high-confidence data to verify whether the data to be validated conflicts with the existing data. Please assign a conflict score from 1 to 5, with 5 indicating a conflict, 1 indicating no conflict, and 0 if the two are unrelated. " \
+                          ".the output should only contain score For example 2"
         users_template = '''
         high-confidence data: {confidence_data}
         Data to be validated: {validate_data}
@@ -46,5 +49,6 @@ class ContradictionFilter:
         return ChatPromptTemplate.from_messages(
             [("system", system_template), ("user", users_template)]
         )
+
 
 

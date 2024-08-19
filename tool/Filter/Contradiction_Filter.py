@@ -27,7 +27,7 @@ class ContradictionFilter:
         # model = self.init_local_model()
         model = self.init_model()
         parser = self.init_parser()
-        chain = prompt_template | model
+        chain = prompt_template | model | parser
         return chain
     def init_parser(self):
         return JsonOutputParser(pydantic_object=self.ResultForm)

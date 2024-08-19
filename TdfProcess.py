@@ -16,9 +16,8 @@ class TdfProcess:
         self.ContradictionFilter = ContradictionFilter()
         self.LangchainMilvusHelper = LangchainMilvusHelper()
         self.ResonableFilter = ReasonableFilter()
-    def contradictionInvoke(self,validate_data:str, conflict_score:int=3):
-        confidence_data = self.LangchainMilvusHelper.search_data(validate_data, 1)
-        return self.ContradictionFilter.invoke(confidence_data[0].metadata["summary"], validate_data)
+    def contradictionInvoke(self,validate_data:str, conflict_score:int=3,confidence_data=None):
+        return self.ContradictionFilter.invoke(confidence_data, validate_data)
     def reasonableInvoke(self,validate_data:str,confidence_score:int=3):
         return self.ResonableFilter.invoke(validate_data)
 
@@ -29,18 +28,21 @@ class TdfProcess:
 
     def load_data_from_huggingface(self, data: str):
         return load_dataset(data)
-
+    def get_confidence_data(self, validate_data:str):
+        return self.LangchainMilvusHelper.search_data(validate_data, 1)[0].metadata["summary"]
     def listProcess(self, validate_datas, conflict_boundry: int = 2, confidence_boundry: int = 3, init: int = 0, results_file:str='results.jsonl', checkpoint_file:str='checkpoint.txt'):
 
         # Load the last processed index from the checkpoint file
         last_index = self.load_checkpoint(checkpoint_file, init)
 
         with open(results_file, 'a') as file:
-            for i in tqdm(range(last_index, 1000), initial=last_index, total=1000,
+            for i in tqdm(range(last_index, len(validate_datas)), initial=last_index, total=len(validate_datas),
                           desc="Processing"):
 
                 validate_data = validate_datas[i]["generate_data"]
-                conflict_score = self.get_ini(self.contradictionInvoke(validate_data))
+               # get = self.contradictionInvoke(validate_data)
+                confidence_data=self.get_confidence_data(validate_data)
+                conflict_score = self.contradictionInvoke(validate_data,confidence_data)
                 is_conflict=None
                 is_confidence=None
                 # try:
@@ -48,7 +50,7 @@ class TdfProcess:
                 # except:
                 #     print(f"error:can't understand {conflict_score}")
                 #     is_conflict = None
-                confidence_score = self.get_ini(self.reasonableInvoke(validate_data))
+                confidence_score = self.reasonableInvoke(validate_data)
                 # try:
                 is_confidence = confidence_score >= confidence_boundry or confidence_score == 0
                 # except:
@@ -57,10 +59,11 @@ class TdfProcess:
 
                 result = {
                     "data": validate_data,
+                    "confidence_data": confidence_data,
                     "conflict_score": conflict_score,
                     "confidence_score": confidence_score,
-                    "is_conflict": is_conflict,
-                    "is_confidence": is_confidence
+                    "conflict_filter": is_conflict,
+                    "confidence_filter": is_confidence
                 }
 
                 # Write the result to the JSON Lines file

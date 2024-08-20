@@ -24,7 +24,7 @@ def get_config():
         # REFERENCE_DATA_FILE=../data_pool/test_pool/biological_data_slices_labeled.jsonl
         # INSTRUCTION_DATA_FILE=../data_pool/test_pool/instruction_data_labeled.jsonl
         config_ = {
-            "output_file": os.getenv("result_file"),
+            "output_file": os.getenv("results_file"),
             "checkpoint_file": os.getenv("checkpoint_file"),
             "save_data_path": os.getenv("save_data_path"),
             # "instruction_data_file": os.getenv("INSTRUCTION_DATA_FILE"),
@@ -42,7 +42,7 @@ class QwenTdfProcess:
         self.ResonableFilter = ReasonableFilter()
 
     # 提示词构建 校验矛盾与否
-    def get_prompts(self, valided_datas) -> list:
+    def get_conflict_prompts(self, valided_datas) -> list:
         prompts_ = []
         for validata in valided_datas:
             matching_knowledge = self.get_confidence_data(validata)
@@ -57,36 +57,90 @@ class QwenTdfProcess:
             )
             prompts_.append(prompt)
         return prompts_
+    # 提示词构建，校验合理与否
+    def get_reasonable_prompts(self, valided_datas) -> list:
+        prompts_ = []
+        for validata in valided_datas:
+            matching_knowledge = self.get_confidence_data(validata)
+            # if not matching_knowledge:
+            #     continue
+            prompt = (
+                        f''' Please evaluate the following description based on your prior knowledge and determine if it is reasonable. Description: {validata} .Assign a score from 1 to 5, where 1 means "not reasonable,
+                        " 5 means "very reasonable," and 0 means "unable to judge." Provide the score along with a rationale for your assessment. your answer should be json format like this: {{"reasonable_score": 5,"explanation"："it is reasonbale"}}.'''
 
-    def process(self):
+
+            )
+            prompts_.append(prompt)
+        return prompts_
+    def process_conflict(self):
         # 配置文件加载
-        config=get_config()
+        config = get_config()
         request_batch_size = config["request_batch_size"]
         last_index = self.load_checkpoint(config["checkpoint_file"])
 
         datasets = self.datset_preprocess(load_dataset(config["validate_data_path"]))
-        with open(config["output_file"], "w") as f:
-            for i in tqdm.tqdm(range(last_index, len(datasets), request_batch_size)):
-                batch_prompts = self.get_prompts(datasets[i:i + request_batch_size])
+        with open(config["output_file"], "a") as f:
+            for i in tqdm(range(last_index, len(datasets), request_batch_size)):
+                batch_prompts = self.get_conflict_prompts(datasets[i:i + request_batch_size])
                 results = api_generation(batch_prompts)
                 for j in range(len(batch_prompts)):
                     result = results[j]
                     response = result.get("response")
                     index = i + j
                     # 处理response字段，将其转换为包含input和output的字典
-                    output_lines = response.split("\n")
-                    input_value = output_lines[0].replace("input: ", "")
-                    output_value = output_lines[1].replace("output: ", "")
-                    if output_value == "" or input_value == "":
-                        index -= 1
+                    # output_lines = response.split("\n")
+                    # input_value = output_lines[0].replace("input: ", "")
+                    # output_value = output_lines[1].replace("output: ", "")
+                    # if output_value == "" or input_value == "":
+                    #    index -= 1
+                    #    continue
+                    try:
+                        response = json.loads(response.replace('：', ':'))
+                    except:
                         continue
                     record = {
                         "id": index,
-                        "input": input_value,
-                        "output": output_value
+                        "prompt": batch_prompts[j],
+                        "conflict_score": response['conflict_score'],
+                        "explanation": response['explanation']
                     }
                     f.write(json.dumps(record, ensure_ascii=False) + '\n')
                     self.update_checkpoint(config["checkpoint_file"], index)
+    def process_reasonable(self):
+        # 配置文件加载
+        config = get_config()
+        request_batch_size = config["request_batch_size"]
+        last_index = self.load_checkpoint(config["checkpoint_file"])
+
+        datasets = self.datset_preprocess(load_dataset(config["validate_data_path"]))
+        with open(config["output_file"], "a") as f:
+            for i in tqdm(range(last_index, len(datasets), request_batch_size)):
+                batch_prompts = self.get_reasonable_prompts(datasets[i:i + request_batch_size])
+                results = api_generation(batch_prompts)
+                for j in range(len(batch_prompts)):
+                    result = results[j]
+                    response = result.get("response")
+                    index = i + j
+                    # 处理response字段，将其转换为包含input和output的字典
+                    # output_lines = response.split("\n")
+                    # input_value = output_lines[0].replace("input: ", "")
+                    # output_value = output_lines[1].replace("output: ", "")
+                    # if output_value == "" or input_value == "":
+                    #    index -= 1
+                    #    continue
+                    try:
+                        response = json.loads(response.replace('：', ':'))
+                    except:
+                        continue
+                    record = {
+                        "id": index,
+                        "prompt": batch_prompts[j],
+                        "reasonable_score": response['reasonable_score'],
+                        "explanation": response['explanation']
+                    }
+                    f.write(json.dumps(record, ensure_ascii=False) + '\n')
+                    self.update_checkpoint(config["checkpoint_file"], index)
+
 
 
     def datset_preprocess(self, datasets):
@@ -115,4 +169,4 @@ class QwenTdfProcess:
 
 if __name__ == "__main__":
     process = QwenTdfProcess()
-    process.process()
+    process.process_reasonable()

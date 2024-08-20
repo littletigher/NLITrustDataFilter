@@ -22,6 +22,34 @@ def make_request(config_, prompt_, device):
     return data_
 
 
+def make_request_attentionMask(config_, prompt_, device):
+    model = AutoModelForCausalLM.from_pretrained(config_['model_path'], torch_dtype="auto").to(device)
+    tokenizer = AutoTokenizer.from_pretrained(config_['model_path'])
+
+    # 创建用户输入信息
+    messages = [{"role": "user", "content": prompt_}]
+    # 将消息转换为模型期望的格式
+    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    # 将输入文本进行标记，并生成attention_mask
+    model_inputs = tokenizer([text], return_tensors="pt", padding=True, truncation=True).to(device)
+
+    # 显式地传递attention_mask
+    generated_ids = model.generate(
+        input_ids=model_inputs.input_ids,
+        attention_mask=model_inputs.attention_mask,  # 添加attention_mask
+        max_new_tokens=config_['max_new_tokens']
+    )
+
+    # 删除输入标记，得到新生成的文本
+    generated_ids = [output_ids[len(input_ids):] for input_ids, output_ids in
+                     zip(model_inputs.input_ids, generated_ids)]
+    response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+
+    # 准备返回的数据，包括prompt、response和时间戳
+    data_ = {"prompt": prompt_, "response": response, "created_at": str(datetime.now())}
+    return data_
+
+
 def worker(config, prompts, device):
     results = []
     for prompt in prompts:

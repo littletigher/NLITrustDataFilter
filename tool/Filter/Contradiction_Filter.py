@@ -10,7 +10,7 @@ load_dotenv()
 class ContradictionFilter:
     class ResultForm(BaseModel):
         conflict_score: str = Field(description="conflict score which should be int")
-        # reason:str = Field(description="reason")
+        explanation:str = Field(description="explanation")
     def __init__(self):
         self.chain = self.init_chain()
 
@@ -40,11 +40,11 @@ class ContradictionFilter:
         return ChatOpenAI(model="gpt-3.5-turbo")
 
     def init_prompt_template(self):
-        system_template = "Please use known high-confidence data to verify whether the data to be validated conflicts with the existing data. Please assign a conflict score from 1 to 5, with 5 indicating a conflict, 1 indicating no conflict, and 0 if the two are unrelated. " \
-                          ".the output should only contain score For example 2"
+        system_template = "Based on the provided known information: {confidence_data}, determine whether the validation information: {validate_data} conflicts with it."
         users_template = '''
-        high-confidence data: {confidence_data}
-        Data to be validated: {validate_data}
+        Based on the provided known information: {confidence_data}, determine whether the validation information: {validate_data} conflicts with it.
+                         Provide a score from 1 to 5, where 1 indicates no conflict and 5 indicates a strong conflict, and 0 means the two are unrelated. 
+                         Provide the score along with an explanation. your answer should be json format like this: {{"conflict_score": 2,"explanation"："there are no conflict"}}
         '''
         return ChatPromptTemplate.from_messages(
             [("system", system_template), ("user", users_template)]

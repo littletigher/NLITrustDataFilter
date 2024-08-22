@@ -50,10 +50,8 @@ class QwenTdfProcess:
             #     continue
             prompt = (
                         f''' Based on the provided known information: {matching_knowledge}, determine whether the validation information: {validata} conflicts with it.
-                         Provide a score from 1 to 5, where 1 indicates no conflict and 5 indicates a strong conflict, and 0 means the two are unrelated. 
+                         Provide a score from 1 to 5, where 1 indicates no conflict and 5 indicates a strong conflict, and 0 means the two are unrelated.only give a score of 0 if you're genuinely unsure how to rate 
                          Provide the score along with an explanation. your answer should be json format like this: {{"conflict_score": 2,"explanation"："there are no conflict"}}.'''
-
-
             )
             prompts_.append(prompt)
         return prompts_
@@ -169,4 +167,4 @@ class QwenTdfProcess:
 
 if __name__ == "__main__":
     process = QwenTdfProcess()
-    process.process_reasonable()
+    process.process_conflict()

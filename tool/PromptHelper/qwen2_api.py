@@ -6,8 +6,8 @@ from datetime import datetime
 
 
 def make_request(config_, prompt_, device):
-    model = AutoModelForCausalLM.from_pretrained(config_['model_path'], torch_dtype="auto").to(device)
-    tokenizer = AutoTokenizer.from_pretrained(config_['model_path'])
+    model = AutoModelForCausalLM.from_pretrained(config_['model_path'], torch_dtype="auto",trust_remote_code=True).to(device)
+    tokenizer = AutoTokenizer.from_pretrained(config_['model_path'],trust_remote_code=True)
 
     messages = [{"role": "user", "content": prompt_}]
     text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)

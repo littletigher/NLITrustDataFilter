@@ -4,7 +4,8 @@ from tool.LangchainHelper.langchainMilvusHelper import LangchainMilvusHelper
 from datasets import load_dataset
 from tqdm import tqdm
 from dotenv import load_dotenv
-from tool.PromptHelper.qwen2_api import api_generation
+from tool.Milvus.MilvusWrapper import MilvusWrapper
+from tool.PromptHelper.chatgpt3_5 import api_generation
 import json
 import os
 import re
@@ -39,19 +40,25 @@ class QwenTdfProcess:
     def __init__(self):
         self.ContradictionFilter = ContradictionFilter()
         self.LangchainMilvusHelper = LangchainMilvusHelper()
+        self.MilvusWrapper = MilvusWrapper()
         self.ResonableFilter = ReasonableFilter()
 
     # 提示词构建 校验矛盾与否
     def get_conflict_prompts(self, valided_datas) -> list:
         prompts_ = []
         for validata in valided_datas:
-            matching_knowledge = self.get_confidence_data(validata)
+
+            matching_knowledge = self.get_confidence_data(validata,mod="local")
             # if not matching_knowledge:
             #     continue
             prompt = (
-                        f''' Based on the provided known information: {matching_knowledge}, determine whether the validation information: {validata} conflicts with it.
-                         Provide a score from 1 to 5, where 1 indicates no conflict and 5 indicates a strong conflict, and 0 means the two are unrelated.only give a score of 0 if you're genuinely unsure how to rate 
-                         Provide the score along with an explanation. your answer should be json format like this: {{"conflict_score": 2,"explanation"："there are no conflict"}}.'''
+                        # f''' Based on the provided known information: {matching_knowledge}, determine whether the validation information: {validata} conflicts with it.
+                        #  Provide a score from 1 to 5, where 1 indicates no conflict and 5 indicates a strong conflict, and 0 means the two are unrelated.only give a score of 0 if you're genuinely unsure how to rate
+                        #  Provide the score along with an explanation. your answer should be json format like this: {{"conflict_score": 2,"explanation"："there are no conflict"}}.'''
+                        f'''"Based on the provided known information: {matching_knowledge}, evaluate whether the validation information: {validata} is correct or incorrect.
+                        \nUse the known information to determine if the validation information can be logically inferred or contradicted by the known information.\nProvide 
+                        a binary result, where 1 indicates the validation information is correct based on the known information, and 0 indicates it is incorrect. Provide an 
+                        explanation for your decision in the following JSON format: {{\"result\": 0/1, \"explanation\": \"The validation information is incorrect/correct because ..\"}}'''
             )
             prompts_.append(prompt)
         return prompts_
@@ -59,7 +66,7 @@ class QwenTdfProcess:
     def get_reasonable_prompts(self, valided_datas) -> list:
         prompts_ = []
         for validata in valided_datas:
-            matching_knowledge = self.get_confidence_data(validata)
+            # matching_knowledge = self.get_confidence_data(validata)
             # if not matching_knowledge:
             #     continue
             prompt = (
@@ -75,10 +82,11 @@ class QwenTdfProcess:
         config = get_config()
         request_batch_size = config["request_batch_size"]
         last_index = self.load_checkpoint(config["checkpoint_file"])
-
-        datasets = self.datset_preprocess(load_dataset(config["validate_data_path"]))
-        with open(config["output_file"], "a") as f:
-            for i in tqdm(range(last_index, len(datasets), request_batch_size)):
+        datasets = self.datset_preprocess(self.load_data_from_json(config["validate_data_path"]))
+        # generate_count =  len(datasets)
+        generate_count = 500
+        with open(config["output_file"], "a",encoding='utf-8') as f:
+            for i in tqdm(range(last_index, generate_count, request_batch_size)):
                 batch_prompts = self.get_conflict_prompts(datasets[i:i + request_batch_size])
                 results = api_generation(batch_prompts)
                 for j in range(len(batch_prompts)):
@@ -99,7 +107,7 @@ class QwenTdfProcess:
                     record = {
                         "id": index,
                         "prompt": batch_prompts[j],
-                        "conflict_score": response['conflict_score'],
+                        "conflict_score": response['result'],
                         "explanation": response['explanation']
                     }
                     f.write(json.dumps(record, ensure_ascii=False) + '\n')
@@ -142,11 +150,19 @@ class QwenTdfProcess:
 
 
     def datset_preprocess(self, datasets):
-        return datasets["train"]['generate_data']
+        # return datasets["train"]['generate_data']
+        return datasets
     def load_data_from_huggingface(self, data: str):
         return load_dataset(data)
-    def get_confidence_data(self, validate_data:str):
-        return self.LangchainMilvusHelper.search_data(validate_data, 1)[0].metadata["summary"]
+
+    def load_data_from_json(self,data:str):
+        with open(data, "r") as f:
+            return json.load(f)
+    def get_confidence_data(self, validate_data:str, top_k=1,mod="local"):
+        if(mod=="local"):
+            return self.MilvusWrapper.query(validate_data, top_k=top_k)
+        else:
+            return self.LangchainMilvusHelper.search_data(validate_data, 1)[0].metadata["summary"]
     def load_checkpoint(self,file_path, default=0):
         if os.path.exists(file_path):
             with open(file_path, 'r') as f:
@@ -162,8 +178,6 @@ class QwenTdfProcess:
 
         return int(first_digit) # 输出：5
 
-    def get_confidence_data(self, validate_data:str):
-        return self.LangchainMilvusHelper.search_data(validate_data, 1)[0].metadata["summary"]
 
 if __name__ == "__main__":
     process = QwenTdfProcess()

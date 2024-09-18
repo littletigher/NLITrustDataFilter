@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="zhangjinghong@10.110.15.74:32122 key (3)" remoteFilesAllowedToDisappearOnAutoupload="false" autoUploadExternalChanges="true">
+    <serverData>
+      <paths name="zhangjinghong@10.110.15.74:32122 key">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/zhangjinghong/TDFilter" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="zhangjinghong@10.110.15.74:32122 key (2)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/zhangjinghong/TDFilter" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="zhangjinghong@10.110.15.74:32122 key (3)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/zhangjinghong/TDFilter" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="实验室3090">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="超算平台">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>

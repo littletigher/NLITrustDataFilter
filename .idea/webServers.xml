@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="d4876498-bf36-4e0b-979e-7cfa54452fab" name="实验室3090">
+        <fileTransfer rootFolder="/home/zhangjinghong" accessType="SFTP" host="10.110.15.74" port="32122" sshConfigId="c01314dd-5017-4aeb-8654-b8a9ceaf29bc" sshConfig="zhangjinghong@10.110.15.74:32122 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="05b1c219-064f-4716-a6b3-0aca82f7f297" name="超算平台">
+        <fileTransfer rootFolder="/home/u2010813054" accessType="SFTP" host="10.160.16.3" port="21001" sshConfigId="7df936a3-b0de-491c-9164-11e1609e3396" sshConfig="u2010813054@10.160.16.3:21001 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 class MilvusWrapper:
-    def __init__(self, host='localhost', port='19530', collection_name='text_collection'):
+    def __init__(self, host='localhost', port='19530', collection_name='iterative_dataset'):
         self.collection_name = collection_name
         self.collection = None
 
@@ -44,21 +44,19 @@ class MilvusWrapper:
             embeddings = self.model(**inputs, return_dict=True).pooler_output
         return embeddings.cpu().numpy().astype(np.float32)
 
-    def insert_data(self, ids, texts):
+    def insert_data(self, insert_data):
         """
         插入文本和对应的嵌入向量到 Milvus 集合中。
 
         参数:
         ids (list[int]): 数据的唯一标识符。
-        texts (list[str]): 与向量关联的知识文本。
+        knowledge (list[str]): 与向量关联的知识文本。
         """
-        embeddings = [self.embed_text(text) for text in texts]  # 自动编码文本
-
         # 插入数据
-        self.collection.insert([ids, embeddings, texts])
-        print(f"Inserted {len(ids)} records into the collection.")
+        return self.collection.insert(insert_data)
 
-    def query(self, text, top_k=10):
+
+    def query(self, text, top_k=4):
         """
         根据文本查询最相似的向量。
 
@@ -74,7 +72,7 @@ class MilvusWrapper:
         results = self.collection.search(
             embedding,
             anns_field="embedding",
-            param={"metric_type": "L2", "params": {"nprobe": 10}},
+            param={"metric_type": "COSINE", "params": {"nprobe": 10}},
             limit=top_k,
             output_fields=["knowledge"],  # 确保返回 `knowledge` 字段
             expr=None
@@ -83,14 +81,17 @@ class MilvusWrapper:
         # 解析并返回查询结果
         query_results = []
         for result in results[0]:
+            if(result.distance<0.8):
+                continue
             result_info = {
                 'id': result.id,
                 'knowledge': result.entity.get('knowledge'),
-                'distance': result.distance
+                'distance': result.distance,
+                'flag': result.entity.get('flag')
             }
             query_results.append(result_info)
 
-        return "["+query_results[0]['knowledge'] +"]"
+        return query_results
 
 
 if __name__ == "__main__":
@@ -103,6 +104,6 @@ if __name__ == "__main__":
     # milvus_wrapper.insert_data(ids, texts)
 
     # 查询示例
-    query_text = "Tell me about the capital of France."
-    results = milvus_wrapper.query(query_text, top_k=1)
+    query_text = "What is the capital of France?"
+    results = milvus_wrapper.query(query_text, top_k=5)
     print(results[0]['knowledge'] if results else "No results found.")

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig host="10.110.15.74" id="c01314dd-5017-4aeb-8654-b8a9ceaf29bc" keyPath="D:\old-ssh\ZhangJingHong" port="32122" nameFormat="DESCRIPTIVE" username="zhangjinghong" useOpenSSHConfig="true" />
+      <sshConfig authType="PASSWORD" host="10.160.16.3" id="7df936a3-b0de-491c-9164-11e1609e3396" port="21001" nameFormat="DESCRIPTIVE" username="u2010813054" useOpenSSHConfig="true" />
+    </configs>
+  </component>
+</project>

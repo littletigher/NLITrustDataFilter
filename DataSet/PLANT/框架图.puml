@@ -1,0 +1,69 @@
+@startuml
+skinparam rectangle<<behavior>> {
+    roundCorner 25
+}
+
+sprite $bProcess jar:archimate/business-process
+sprite $aService jar:archimate/application-service
+sprite $aComponent jar:archimate/application-component
+
+' 业务流程层（Business Process）
+rectangle "数据过滤" as MainProcess <<$bProcess>><<behavior>> #Business
+rectangle "数据预处理" as Preprocessing <<$bProcess>><<behavior>> #Business
+rectangle "可信知识匹配" as Matching <<$bProcess>><<behavior>> #Business
+rectangle "可信度判别" as Credibility <<$bProcess>><<behavior>> #Business
+rectangle "矛盾度判别" as Contradiction <<$bProcess>><<behavior>> #Business
+rectangle "决策树判别" as DecisionTree <<$bProcess>><<behavior>> #Business
+rectangle "数据存储" as Storage <<$bProcess>><<behavior>> #Business
+
+MainProcess *-down- Preprocessing
+MainProcess *-down- Matching
+MainProcess *-down- Credibility
+MainProcess *-down- Contradiction
+MainProcess *-down- DecisionTree
+MainProcess *-down- Storage
+
+Preprocessing -right->> Matching
+Matching -right->> Credibility
+Credibility -right->> Contradiction
+Contradiction -right->> DecisionTree
+DecisionTree -right->> Storage
+
+' 应用服务层（Application Service）
+rectangle "人工标注" as Annotation <<$aService>><<behavior>> #Application
+rectangle "向量数据服务" as VectorService <<$aService>><<behavior>> #Application
+rectangle "大语言模型服务" as LLMService <<$aService>><<behavior>> #Application
+rectangle "nli模型服务" as NLIModelService <<$aService>><<behavior>> #Application
+rectangle "决策树服务" as DecisionTreeService <<$aService>><<behavior>> #Application
+
+Annotation -up-> Preprocessing
+VectorService -up-> Matching
+VectorService -up-> Storage
+LLMService -up-> Preprocessing
+LLMService -up-> Credibility
+NLIModelService -up-> Contradiction
+DecisionTreeService -up-> DecisionTree
+
+' 应用组件层（Application Component）
+rectangle "训练框架" as TrainingFramework <<$aComponent>> #Application
+rectangle "大模型接口" as LLMInterface <<$aComponent>> #Application
+rectangle "Nli模型接口" as NLIInterface <<$aComponent>> #Application
+rectangle "向量数据库" as VectorDatabase <<$aComponent>> #Application
+
+TrainingFramework .up.|> DecisionTreeService
+TrainingFramework .up.|> NLIModelService
+LLMInterface .up.|> LLMService
+NLIInterface .up.|> NLIModelService
+VectorDatabase .up.|> VectorService
+
+legend left
+Example of a data filtering architecture.
+See
+====
+<$bProcess> : business process
+====
+<$aService> : application service
+====
+<$aComponent> : application component
+endlegend
+@enduml

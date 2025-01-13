@@ -1,0 +1,69 @@
+@startuml
+skinparam rectangle<<behavior>> {
+    roundCorner 25
+}
+
+sprite $bProcess jar:archimate/business-process
+sprite $aService jar:archimate/application-service
+sprite $aComponent jar:archimate/application-component
+
+' Business Process Layer
+rectangle "Data Filtering" as MainProcess <<$bProcess>><<behavior>> #Business
+rectangle "Data Preprocessing" as Preprocessing <<$bProcess>><<behavior>> #Business
+rectangle "Trusted Knowledge Matching" as Matching <<$bProcess>><<behavior>> #Business
+rectangle "Confidence Evaluation" as Credibility <<$bProcess>><<behavior>> #Business
+rectangle "Contradiction Evaluation" as Contradiction <<$bProcess>><<behavior>> #Business
+rectangle "Decision Tree Evaluation" as DecisionTree <<$bProcess>><<behavior>> #Business
+rectangle "Data Storage" as Storage <<$bProcess>><<behavior>> #Business
+
+MainProcess *-down- Preprocessing
+MainProcess *-down- Matching
+MainProcess *-down- Credibility
+MainProcess *-down- Contradiction
+MainProcess *-down- DecisionTree
+MainProcess *-down- Storage
+
+Preprocessing -right->> Matching
+Matching -right->> Credibility
+Credibility -right->> Contradiction
+Contradiction -right->> DecisionTree
+DecisionTree -right->> Storage
+
+' Application Service Layer
+rectangle "Manual Annotation" as Annotation <<$aService>><<behavior>> #Application
+rectangle "Vector Data Service" as VectorService <<$aService>><<behavior>> #Application
+rectangle "Large Language Model Service" as LLMService <<$aService>><<behavior>> #Application
+rectangle "NLI Model Service" as NLIModelService <<$aService>><<behavior>> #Application
+rectangle "Decision Tree Service" as DecisionTreeService <<$aService>><<behavior>> #Application
+
+Annotation -up-> Preprocessing
+VectorService -up-> Matching
+VectorService -up-> Storage
+LLMService -up-> Preprocessing
+LLMService -up-> Credibility
+NLIModelService -up-> Contradiction
+DecisionTreeService -up-> DecisionTree
+
+' Application Component Layer
+rectangle "Training Framework" as TrainingFramework <<$aComponent>> #Application
+rectangle "Large Model Interface" as LLMInterface <<$aComponent>> #Application
+rectangle "NLI Model Interface" as NLIInterface <<$aComponent>> #Application
+rectangle "Vector Database" as VectorDatabase <<$aComponent>> #Application
+
+TrainingFramework .up.|> DecisionTreeService
+TrainingFramework .up.|> NLIModelService
+LLMInterface .up.|> LLMService
+NLIInterface .up.|> NLIModelService
+VectorDatabase .up.|> VectorService
+
+legend left
+Example of a data filtering architecture.
+See
+====
+<$bProcess> : business process
+====
+<$aService> : application service
+====
+<$aComponent> : application component
+endlegend
+@enduml

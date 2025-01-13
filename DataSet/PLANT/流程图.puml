@@ -1,0 +1,31 @@
+@startuml
+skinparam rectangle {
+    roundCorner 25
+}
+
+rectangle "开始" as Start #Lavender
+rectangle "待处理数据" as Data #Green
+rectangle "可信知识匹配" as Match #SkyBlue
+rectangle "判断" as Decision #Beige
+rectangle "可信度判断" as Credibility #LightSteelBlue
+rectangle "roberta-mnli\n矛盾程度判断" as Roberta #LightGray
+rectangle "决策树判定" as DecisionTree #Beige
+rectangle "知识库" as KnowledgeBase #Green
+rectangle "丢弃" as Discard #LightGreen
+rectangle "下次迭代再做处理" as NextIteration #LightGreen
+rectangle "结束" as End #Lavender
+
+Start -down-> Data
+Data -right-> Match
+Match -down-> Decision
+Decision -right-> NextIteration : 无相关知识
+Decision -down-> Roberta : 有相关知识, R
+Decision -> Credibility : 有相关知识, R
+Roberta -down-> DecisionTree : 矛盾度: contradiction_flag, 结果置信度: score_of_contradiction
+DecisionTree -down-> KnowledgeBase : 合格
+DecisionTree -right-> Discard : 不合格
+KnowledgeBase -down-> End : 数据全部处理完毕
+NextIteration -up-> Credibility : 不再迭代, R=-1, lambda=1
+Credibility -down-> DecisionTree : 可信flag: C, 结果置信度: CS
+
+@enduml

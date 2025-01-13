@@ -56,7 +56,7 @@ class MilvusWrapper:
         return self.collection.insert(insert_data)
 
 
-    def query(self, text, top_k=4):
+    def query(self, text, top_k=1):
         """
         根据文本查询最相似的向量。
 
@@ -81,7 +81,7 @@ class MilvusWrapper:
         # 解析并返回查询结果
         query_results = []
         for result in results[0]:
-            if(result.distance<0.8):
+            if(result.distance<0.85):
                 continue
             result_info = {
                 'id': result.id,

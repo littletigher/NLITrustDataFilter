@@ -1,0 +1,10 @@
+经过训练的模型在原始数据集合上的表现为
+D:/PycharmProjects/TDFilter/textclassific/experiment_data.json
+95%
+
+在其他数据集上的表现为
+D:/PycharmProjects/TDFilter/textclassific/bert_trustdatafilter_55/checkpoint-1608
+94.38%
+
+
+在另一数据集上的表现为

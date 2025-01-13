@@ -1,0 +1,32 @@
+@startuml
+skinparam rectangle {
+    roundCorner 25
+}
+
+rectangle "Start" as Start #Lavender
+rectangle "Data to Process" as Data #Green
+rectangle "Trusted Knowledge Matching" as Match #SkyBlue
+rectangle "Decision" as Decision #Beige
+rectangle "Confidence Evaluation" as Credibility #LightSteelBlue
+rectangle "Contradiction Evaluation" as Roberta #LightGray
+rectangle "Decision Tree Evaluation" as DecisionTree #Beige
+rectangle "Knowledge Base" as KnowledgeBase #Green
+rectangle "Discard" as Discard #LightGreen
+rectangle "Process in Next Iteration" as NextIteration #LightGreen
+rectangle "End" as End #Lavender
+
+Start -down-> Data
+Data -right-> Match
+Match -down-> Decision
+Decision -right-> NextIteration : Match Failure,knowledge
+Decision -down-> Roberta : Match Success, knowledge,matchingKnowledge
+Decision -> Credibility : Match Success, knowledge
+Roberta -down-> DecisionTree : contradict_flag,score_of_contradict
+DecisionTree -down-> KnowledgeBase : Qualified
+DecisionTree -right-> Discard : Not Qualified
+KnowledgeBase -down-> End : All Data Processed
+NextIteration -up-> Credibility : No Further Iteration, R=-1, lambda=1
+NextIteration -up-> Data : Further Iteration,{Knowledge1,knowledge2...}
+Credibility -down-> DecisionTree : confidence_flag: C, score_of_confidence
+
+@enduml
